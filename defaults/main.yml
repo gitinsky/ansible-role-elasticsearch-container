@@ -1,0 +1,7 @@
+---
+elasticsearch_unicast_hosts:
+  - sverka-05.node.dc1.consul:9300
+  - sverka-06.node.dc1.consul:9300
+  - sverka-07.node.dc1.consul:9300
+  - sverka-08.node.dc1.consul:9300
+  - sverka-12.node.dc1.consul:9300

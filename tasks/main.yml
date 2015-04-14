@@ -7,6 +7,7 @@
 
 - name: put ES config
   template: src=elasticsearch.yml dest={{ ext_elasticsearch_volume }}/elasticsearch.yml
+  tags: estest
 
 - name: check if an elasticsearch container is started
   command: bash -c "docker ps | grep elasticsearch"
