@@ -1,4 +1,5 @@
 ---
+ext_elasticsearch_volume: /var/lib/docker-extvols/elasticsearch
 elasticsearch_unicast_hosts:
   - sverka-05.node.dc1.consul:9300
   - sverka-06.node.dc1.consul:9300
