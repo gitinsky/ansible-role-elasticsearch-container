@@ -22,13 +22,13 @@ discovery:
         enabled: false
       unicast:
         hosts: 
-          {%- for host in elasticsearch_unicast_hosts -%}
+          {%- for host in groups['consul-quorum'] -%}
               {% if loop.index > 1 -%}
               ,
               {%- else -%}
               {{ ' ' }}
               {%- endif -%}
-              {{ host }}
+              {{ hostvars[host].ansible_default_ipv4.address }}
           {%- endfor %}
 
 
