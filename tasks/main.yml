@@ -10,6 +10,7 @@
 
 - name: put ES config
   template: src=elasticsearch.yml dest={{ ext_elasticsearch_volume }}/elasticsearch.yml
+  register: es_config
   tags:
     - docker
     - es
@@ -28,3 +29,23 @@
   tags:
     - docker
     - es
+
+# - name: start Elasticsearch container
+#   docker:
+#     image: gitinsky/elasticsearch:0.1.0
+#     state: restarted
+#     hostname: "es-{{ ansible_hostname }}"
+#     dns:
+#       - "{{ ansible_docker0.ipv4.address }}"
+#       - 8.8.8.8
+#     ports:
+#         - "9200:9200"
+#         - "9300:9300"
+#     volumes:
+#       - "{{ ext_elasticsearch_volume }}:/data"
+#       - "{{ ext_elasticsearch_volume }}/elasticsearch.yml:/elasticsearch/config/elasticsearch.yml"
+#     name: elasticsearch
+#   tags:
+#     - docker
+#     - es
+#     # state: "{{ 'restarted' if es_config.changed else 'reloaded' }}"
