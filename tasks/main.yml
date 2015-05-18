@@ -15,37 +15,22 @@
     - docker
     - es
 
-- name: check if an elasticsearch container is started
-  command: bash -c "docker ps | grep elasticsearch"
-  ignore_errors: True
-  register: result
+- name: start Elasticsearch container
+  docker:
+    image: gitinsky/elasticsearch:0.1.0
+    state: "{{ 'restarted' if es_config.changed else 'reloaded' }}"
+    hostname: "es-{{ ansible_hostname }}"
+    dns:
+      - "{{ ansible_docker0.ipv4.address }}"
+      - 8.8.8.8
+    ports:
+        - "9200:9200"
+        - "9300:9300"
+    volumes:
+      - "{{ ext_elasticsearch_volume }}:/data"
+      - "{{ ext_elasticsearch_volume }}/elasticsearch.yml:/elasticsearch/config/elasticsearch.yml"
+    name: elasticsearch
+    restart_policy: always
   tags:
     - docker
     - es
-
-- name: start an elasticsearch container
-  command: docker run -d -h es-{{ ansible_hostname }} --dns {{ ansible_docker0.ipv4.address }} --dns 8.8.8.8 --dns-search service.consul -p=9200:9200 -p=9300:9300 -v {{ ext_elasticsearch_volume }}:/data -v {{ ext_elasticsearch_volume }}/elasticsearch.yml:/elasticsearch/config/elasticsearch.yml -name elasticsearch gitinsky/elasticsearch:0.1.0
-  when: result|failed
-  tags:
-    - docker
-    - es
-
-# - name: start Elasticsearch container
-#   docker:
-#     image: gitinsky/elasticsearch:0.1.0
-#     state: restarted
-#     hostname: "es-{{ ansible_hostname }}"
-#     dns:
-#       - "{{ ansible_docker0.ipv4.address }}"
-#       - 8.8.8.8
-#     ports:
-#         - "9200:9200"
-#         - "9300:9300"
-#     volumes:
-#       - "{{ ext_elasticsearch_volume }}:/data"
-#       - "{{ ext_elasticsearch_volume }}/elasticsearch.yml:/elasticsearch/config/elasticsearch.yml"
-#     name: elasticsearch
-#   tags:
-#     - docker
-#     - es
-#     # state: "{{ 'restarted' if es_config.changed else 'reloaded' }}"
