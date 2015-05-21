@@ -2,6 +2,14 @@
 #- name: pull ES image
 #  command: docker pull docker-registry.local/elasticsearch
 
+- name: install modules required for http checks
+  apt: name={{ item }}
+  with_items:
+    - python-httplib2
+  tags:
+    - docker
+    - es
+
 - name: create ext volume
   file: state=directory path={{ ext_elasticsearch_volume }}
   tags:
@@ -15,6 +23,20 @@
     - docker
     - es
 
+# - name: set fact to mark ES group
+#   set_fact:
+#     elastic_cluster_restart_marker: elastic_cluster_restart
+#   tags:
+#     - docker
+#     - es
+#
+# - name: group by marker
+#   group_by: key=elastic_cluster_restart_marker
+#   changed_when: no
+#   tags:
+#     - docker
+#     - es
+    
 - name: start Elasticsearch container
   docker:
     image: gitinsky/elasticsearch:0.1.0
@@ -31,6 +53,22 @@
       - "{{ ext_elasticsearch_volume }}/elasticsearch.yml:/elasticsearch/config/elasticsearch.yml"
     name: elasticsearch
     restart_policy: always
+  # with_items: groups['elastic_cluster_restart_marker']
+  # when: "hostvars[item].inventory_hostname == inventory_hostname"
+  tags:
+    - docker
+    - es
+
+- name: wait for valid state
+  uri:
+    url: http://127.0.0.1:9200/_cluster/health
+    return_content: yes
+    body_format: json
+    status_code: 200
+  register: es_cluster_health
+  until: es_cluster_health.json.status is defined and es_cluster_health.json.status == 'green'
+  delay: 10
+  retries: 10
   tags:
     - docker
     - es
