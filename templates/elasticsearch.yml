@@ -22,7 +22,7 @@ discovery:
         enabled: false
       unicast:
         hosts: 
-          {%- for host in groups['consul-quorum'] -%}
+          {%- for host in groups[consul_quorum_group_name] -%}
               {% if loop.index > 1 -%}
               ,
               {%- else -%}

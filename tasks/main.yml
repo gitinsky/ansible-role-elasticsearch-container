@@ -68,7 +68,7 @@
   register: es_cluster_health
   until: es_cluster_health.json.status is defined and es_cluster_health.json.status == 'green'
   delay: 10
-  retries: 10
+  retries: 3600
   tags:
     - docker
     - es
