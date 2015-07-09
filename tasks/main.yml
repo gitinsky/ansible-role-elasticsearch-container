@@ -1,0 +1,23 @@
+- name: create ext volume for data
+  file: state=directory path={{ ext_es_data_volume }}
+
+- name: create ext volume for logs
+  file: state=directory path={{ ext_es_logs_volume }}
+
+- name: check if an elasticsearch container is started
+  command: bash -c "docker ps | grep elasticsearch"
+  ignore_errors: True
+  register: result
+
+- name: start an elasticsearch container
+  command: docker run -d
+              -h {{ ansible_hostname }}-es
+              --dns {{ docker_dns_2 }}
+              --dns {{ ansible_docker0.ipv4.address }}
+              --dns-search node.dc1.consul
+              --read-only
+              -v {{ ext_es_data_volume }}:/elasticsearch/data
+              -v {{ ext_es_logs_volume }}:/elasticsearch/logs
+              --name=elasticsearch gitinsky/elasticsearch:0.1.1
+  register: docker_id
+  when: result|failed
