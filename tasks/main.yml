@@ -18,6 +18,7 @@
               --read-only
               -v {{ ext_es_data_volume }}:/elasticsearch/data
               -v {{ ext_es_logs_volume }}:/elasticsearch/logs
+              --restart=always
               --name=elasticsearch gitinsky/elasticsearch:0.1.1
   register: docker_id
   when: result|failed
