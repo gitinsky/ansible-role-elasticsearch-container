@@ -13,7 +13,6 @@
   command: docker run -d
               -h {{ ansible_hostname }}-es
               --dns {{ docker_dns_2 }}
-              --dns {{ ansible_docker0.ipv4.address }}
               --dns-search node.dc1.consul
               --read-only
               -p 9200:9200
