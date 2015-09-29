@@ -39,7 +39,7 @@
     
 - name: start Elasticsearch container
   docker:
-    image: gitinsky/elasticsearch:0.1.0
+    image: gitinsky/elasticsearch:latest
     state: "{{ 'restarted' if es_config.changed else 'reloaded' }}"
     hostname: "es-{{ ansible_hostname }}"
     dns:
@@ -58,6 +58,7 @@
   tags:
     - docker
     - es
+  ignore_errors: yes
 
 - name: wait for valid state
   uri:
