@@ -18,6 +18,9 @@ cluster:
 node:
   name: "{{ ansible_hostname }}"
 
+index:
+    number_of_replicas: {{ 1 if groups[elasticsearch_hosts] |length > 1 else 0}}
+
 discovery:
   zen:
     ping:
