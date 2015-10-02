@@ -73,3 +73,7 @@
   tags:
     - docker
     - es
+
+
+# curator --master-only delete indices --older-than 90 --time-unit days --timestring %Y.%m.%d
+# curator --master-only close indices --older-than 7 --time-unit days --timestring %Y.%m.%d
