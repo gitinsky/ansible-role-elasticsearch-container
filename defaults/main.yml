@@ -7,3 +7,5 @@ elasticsearch_unicast_hosts:
   - sverka-07.node.dc1.consul:9300
   - sverka-08.node.dc1.consul:9300
   - sverka-12.node.dc1.consul:9300
+
+elasticsearch_include_curator: yes
