@@ -1,5 +1,9 @@
 {{ elasticsearch_hosts }} is the name of ES hosts group, must be set.
 
+### Variables
+
+- ```{{ elasticsearch_if }}``` – if not set, ```{{ ansible_default_ipv4.interface }}``` will be used
+
 ##### Change number of replicas
 
 If you have a single-node cluster you might want to change number of replicas to zero.

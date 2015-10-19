@@ -34,9 +34,9 @@ discovery:
               {%- else -%}
               {{ ' ' }}
               {%- endif -%}
-              {{ hostvars[host].ansible_default_ipv4.address }}
+              {{ hostvars[host]['ansible_' + hostvars[host].elasticsearch_if|default( hostvars[host].ansible_default_ipv4.interface ) ]['ipv4']['address'] }}
           {%- endfor %}
 
 
 network:
-  publish_host: {{ ansible_default_ipv4.address }}
+  publish_host: {{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname].elasticsearch_if|default( hostvars[inventory_hostname].ansible_default_ipv4.interface ) ]['ipv4']['address'] }}
