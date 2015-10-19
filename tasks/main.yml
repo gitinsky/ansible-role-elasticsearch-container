@@ -1,24 +1,75 @@
-- name: create ext volume for data
-  file: state=directory path={{ ext_es_data_volume }}
+---
+#- name: pull ES image
+#  command: docker pull docker-registry.local/elasticsearch
 
-- name: create ext volume for logs
-  file: state=directory path={{ ext_es_logs_volume }}
+- name: install modules required for http checks
+  apt: name={{ item }}
+  with_items:
+    - python-httplib2
+  tags:
+    - docker
+    - es
 
-- name: check if an elasticsearch container is started
-  command: bash -c "docker ps | grep elasticsearch"
-  ignore_errors: True
-  register: result
+- name: create ext volume
+  file: state=directory path={{ ext_elasticsearch_volume }}
+  tags:
+    - docker
+    - es
 
-- name: start an elasticsearch container
-  command: docker run -d
-              -h {{ ansible_hostname }}-es
-              --dns {{ docker_dns_2 }}
-              --dns-search node.dc1.consul
-              --read-only
-              -p 9200:9200
-              -v {{ ext_es_data_volume }}:/elasticsearch/data
-              -v {{ ext_es_logs_volume }}:/elasticsearch/logs
-              --restart=always
-              --name=elasticsearch gitinsky/elasticsearch:0.1.2
-  register: docker_id
-  when: result|failed
+- name: put ES config
+  template: src=elasticsearch.yml dest={{ ext_elasticsearch_volume }}/elasticsearch.yml
+  register: es_config
+  tags:
+    - docker
+    - es
+
+# - name: set fact to mark ES group
+#   set_fact:
+#     elastic_cluster_restart_marker: elastic_cluster_restart
+#   tags:
+#     - docker
+#     - es
+#
+# - name: group by marker
+#   group_by: key=elastic_cluster_restart_marker
+#   changed_when: no
+#   tags:
+#     - docker
+#     - es
+    
+- name: start Elasticsearch container
+  docker:
+    image: gitinsky/elasticsearch:latest
+    state: "{{ 'restarted' if es_config.changed else 'reloaded' }}"
+    hostname: "es-{{ ansible_hostname }}"
+    dns:
+      - "{{ ansible_docker0.ipv4.address }}"
+      - 8.8.8.8
+    ports:
+        - "{{ es_listen_address + ':' if es_listen_address is defined else '' }}9200:9200"
+        - "{{ es_listen_address + ':' if es_listen_address is defined else '' }}9300:9300"
+    volumes:
+      - "{{ ext_elasticsearch_volume }}:/data"
+      - "{{ ext_elasticsearch_volume }}/elasticsearch.yml:/elasticsearch/config/elasticsearch.yml"
+    name: elasticsearch
+    restart_policy: always
+  # with_items: groups['elastic_cluster_restart_marker']
+  # when: "hostvars[item].inventory_hostname == inventory_hostname"
+  tags:
+    - docker
+    - es
+  ignore_errors: yes
+
+- name: wait for valid state
+  uri:
+    url: http://127.0.0.1:9200/_cluster/health
+    return_content: yes
+    body_format: json
+    status_code: 200
+  register: es_cluster_health
+  until: es_cluster_health.json.status is defined and es_cluster_health.json.status == 'green'
+  delay: 10
+  retries: 3600
+  tags:
+    - docker
+    - es

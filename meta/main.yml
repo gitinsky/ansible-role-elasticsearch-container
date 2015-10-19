@@ -1,0 +1,6 @@
+dependencies:
+
+    - role: curator
+      when: elasticsearch_include_curator
+      tags: ['curator']
+

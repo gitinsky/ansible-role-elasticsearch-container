@@ -1,0 +1,42 @@
+bootstrap:
+  mlockall: true
+
+script:
+  disable_dynamic: true
+
+http:
+  enabled: true
+
+path:
+  logs: /data/log
+  data: /data/data
+  work: /data/work
+
+cluster:
+  name: log_cluster
+
+node:
+  name: "{{ ansible_hostname }}"
+
+index:
+    number_of_replicas: {{ 1 if groups[elasticsearch_hosts] |length > 1 else 0}}
+
+discovery:
+  zen:
+    ping:
+      multicast:
+        enabled: false
+      unicast:
+        hosts: 
+          {%- for host in groups[elasticsearch_hosts] -%}
+              {% if loop.index > 1 -%}
+              ,
+              {%- else -%}
+              {{ ' ' }}
+              {%- endif -%}
+              {{ hostvars[host].ansible_default_ipv4.address }}
+          {%- endfor %}
+
+
+network:
+  publish_host: {{ ansible_default_ipv4.address }}

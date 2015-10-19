@@ -1,1 +1,5 @@
-docker_dns_2: 8.8.8.8
+---
+ext_elasticsearch_volume: /var/lib/docker-extvols/elasticsearch
+elasticsearch_hosts: es-hosts
+
+elasticsearch_include_curator: yes
