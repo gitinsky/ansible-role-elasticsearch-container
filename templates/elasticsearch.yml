@@ -1,11 +1,11 @@
 bootstrap:
   mlockall: true
 
-script:
-  disable_dynamic: true
-
 http:
   enabled: true
+  cors:
+    enabled: true
+    allow-origin: "*"
 
 path:
   logs: /data/log
@@ -14,12 +14,16 @@ path:
 
 cluster:
   name: log_cluster
+  indices:
+    close:
+      enable: false
 
 node:
   name: "{{ ansible_hostname }}"
 
 index:
     number_of_replicas: {{ 1 if groups[elasticsearch_hosts] |length > 1 else 0}}
+    max_result_window: 10000
 
 discovery:
   zen:
@@ -40,3 +44,4 @@ discovery:
 
 network:
   publish_host: {{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname].elasticsearch_if|default( hostvars[inventory_hostname].ansible_default_ipv4.interface ) ]['ipv4']['address'] }}
+  bind_host: 0.0.0.0
