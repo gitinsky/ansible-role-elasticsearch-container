@@ -23,42 +23,33 @@
     - docker
     - es
 
-# - name: set fact to mark ES group
-#   set_fact:
-#     elastic_cluster_restart_marker: elastic_cluster_restart
-#   tags:
-#     - docker
-#     - es
-#
-# - name: group by marker
-#   group_by: key=elastic_cluster_restart_marker
-#   changed_when: no
-#   tags:
-#     - docker
-#     - es
+- name: check container status
+  shell: "docker inspect elasticsearch"
+  register: container_status
+  ignore_errors: True
+
+- name: kill container
+  shell: "docker stop --time=1800 elasticsearch && docker rm elasticsearch"
+  when: es_config.changed or '"exited"' in container_status.stdout
     
 - name: start Elasticsearch container
-  docker:
-    image: gitinsky/elasticsearch:latest
-    state: "{{ 'restarted' if es_config.changed else 'reloaded' }}"
-    hostname: "es-{{ ansible_hostname }}"
-    dns:
-      - "{{ ansible_docker0.ipv4.address }}"
-      - 8.8.8.8
-    ports:
-        - "{{ es_listen_address + ':' if es_listen_address is defined else '' }}9200:9200"
-        - "{{ es_listen_address + ':' if es_listen_address is defined else '' }}9300:9300"
-    volumes:
-      - "{{ ext_elasticsearch_volume }}:/data"
-      - "{{ ext_elasticsearch_volume }}/elasticsearch.yml:/elasticsearch/config/elasticsearch.yml"
-    name: elasticsearch
-    restart_policy: always
-  # with_items: groups['elastic_cluster_restart_marker']
-  # when: "hostvars[item].inventory_hostname == inventory_hostname"
+  command: docker run -d \
+      -p "{{ es_listen_address + ':' if es_listen_address is defined else '' }}9200:9200" \
+      -p "{{ es_listen_address + ':' if es_listen_address is defined else '' }}9300:9300" \
+      --dns "192.168.160.1" \
+      --volume="{{ ext_elasticsearch_volume }}:/data" \
+      --volume="{{ ext_elasticsearch_volume }}/elasticsearch.yml:/elasticsearch/config/elasticsearch.yml" \
+      --name="elasticsearch" \
+      --hostname="es-{{ ansible_hostname }}" \
+      --restart="always" \
+      gitinsky/elasticsearch:latest
+  when: es_config.changed or
+        'No such image or container' in container_status.stderr or
+        'No such image, container or task' in container_status.stderr or
+        '"exited"' in container_status.stdout
   tags:
     - docker
     - es
-  ignore_errors: yes
 
 - name: wait for valid state
   uri:
