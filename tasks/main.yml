@@ -30,7 +30,7 @@
 
 - name: kill container
   shell: "docker stop --time=1800 elasticsearch && docker rm elasticsearch"
-  when: es_config.changed or '"exited"' in container_status.stdout
+  when: (es_config.changed or '"exited"' in container_status.stdout) and not 'No such image, container or task' in container_status.stdout
     
 - name: start Elasticsearch container
   command: docker run -d \
